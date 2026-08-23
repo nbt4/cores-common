@@ -1,6 +1,7 @@
 # Cores Common
 
-Gemeinsame Go-Pakete für die Cores-Dienste. Das Modul bündelt wiederverwendbare
+Gemeinsame Go-Pakete für RentalCore, WarehouseCore, PlannerCore,
+ProcurementCore und Cores Dashboard. Das Modul bündelt wiederverwendbare
 Bausteine für Branding, Konfiguration, Healthchecks, JWT-Verarbeitung, CORS und
 JSON-Antworten.
 

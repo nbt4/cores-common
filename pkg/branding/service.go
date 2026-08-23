@@ -23,7 +23,7 @@ type Service struct {
 }
 
 // NewService creates a new branding service for the specified service name
-// ("cores", "rental", "warehouse", "planner").
+// ("cores", "rental", "warehouse", "planner", "procurement").
 func NewService(db *gorm.DB, service string) *Service {
 	return &Service{db: db, service: service}
 }
@@ -60,6 +60,9 @@ func (s *Service) GetConfig() Config {
 	case "planner":
 		cfg.LogoSidebar = cacheBuster(s.deref(rec.LogoPlannerSidebar), rec.UpdatedAt)
 		cfg.LogoLogin = cacheBuster(s.deref(rec.LogoPlannerLogin), rec.UpdatedAt)
+	case "procurement":
+		cfg.LogoSidebar = cacheBuster(s.deref(rec.LogoProcurementSidebar), rec.UpdatedAt)
+		cfg.LogoLogin = cacheBuster(s.deref(rec.LogoProcurementLogin), rec.UpdatedAt)
 	}
 
 	return cfg
@@ -75,6 +78,8 @@ func (s *Service) faviconFor(rec Record) string {
 		return s.deref(rec.FaviconWarehouse)
 	case "planner":
 		return s.deref(rec.FaviconPlanner)
+	case "procurement":
+		return s.deref(rec.FaviconProcurement)
 	}
 	return s.deref(rec.FaviconPath)
 }
@@ -87,6 +92,8 @@ func (s *Service) defaultName() string {
 		return "WarehouseCore"
 	case "planner":
 		return "PlannerCore"
+	case "procurement":
+		return "ProcurementCore"
 	default:
 		return ""
 	}
