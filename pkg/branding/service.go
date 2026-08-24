@@ -33,16 +33,17 @@ func (s *Service) GetConfig() Config {
 	var rec Record
 	if err := s.db.First(&rec, 1).Error; err != nil {
 		return Config{
-			CompanyName:     s.defaultName(),
+			ProductName:     s.defaultName(),
+			CompanyName:     "Cores",
 			LogoSizeSidebar: 100,
 			LogoSizeLogin:   100,
 		}
 	}
 
 	cfg := Config{
-		CompanyName:     s.coalesceName(rec.CompanyName),
+		ProductName:     s.defaultName(),
+		CompanyName:     firstNonEmpty(rec.CompanyName, rec.BrandName, "Cores"),
 		BrandName:       rec.BrandName,
-		FaviconPath:     cacheBuster(s.faviconFor(rec), rec.UpdatedAt),
 		LogoSizeSidebar: s.coalesceSize(rec.LogoSizeSidebar),
 		LogoSizeLogin:   s.coalesceSize(rec.LogoSizeLogin),
 	}
@@ -65,7 +66,51 @@ func (s *Service) GetConfig() Config {
 		cfg.LogoLogin = cacheBuster(s.deref(rec.LogoProcurementLogin), rec.UpdatedAt)
 	}
 
+	assets := rec.Assets[s.service]
+	companyAssets := rec.Assets["company"]
+	assets = cacheBustAssets(assets, rec.UpdatedAt)
+	companyAssets = cacheBustAssets(companyAssets, rec.UpdatedAt)
+
+	// Existing installations already have per-position overrides. Treat those
+	// as the matching semantic variants until an administrator uploads the new
+	// asset set.
+	assets.HorizontalOnDark = firstNonEmpty(assets.HorizontalOnDark, cfg.LogoSidebar)
+	assets.StackedOnDark = firstNonEmpty(assets.StackedOnDark, cfg.LogoLogin)
+	assets.Favicon = firstNonEmpty(
+		assets.Favicon,
+		cacheBuster(s.faviconFor(rec), rec.UpdatedAt),
+		cacheBuster(s.deref(rec.FaviconPath), rec.UpdatedAt),
+	)
+	cfg.Assets = assets
+	cfg.CompanyAssets = companyAssets
+	cfg.LogoSidebar = firstNonEmpty(assets.HorizontalOnDark, assets.MarkOnDark)
+	cfg.LogoLogin = firstNonEmpty(assets.StackedOnDark, assets.HorizontalOnDark)
+	cfg.FaviconPath = firstNonEmpty(assets.Favicon, assets.MarkOnLight, assets.MarkOnDark)
+
 	return cfg
+}
+
+func cacheBustAssets(assets AssetSet, updatedAt time.Time) AssetSet {
+	assets.MarkOnDark = cacheBuster(assets.MarkOnDark, updatedAt)
+	assets.MarkOnLight = cacheBuster(assets.MarkOnLight, updatedAt)
+	assets.HorizontalOnDark = cacheBuster(assets.HorizontalOnDark, updatedAt)
+	assets.HorizontalOnLight = cacheBuster(assets.HorizontalOnLight, updatedAt)
+	assets.StackedOnDark = cacheBuster(assets.StackedOnDark, updatedAt)
+	assets.StackedOnLight = cacheBuster(assets.StackedOnLight, updatedAt)
+	assets.Favicon = cacheBuster(assets.Favicon, updatedAt)
+	assets.AppIcon = cacheBuster(assets.AppIcon, updatedAt)
+	assets.MaskableIcon = cacheBuster(assets.MaskableIcon, updatedAt)
+	assets.Print = cacheBuster(assets.Print, updatedAt)
+	return assets
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if value != "" {
+			return value
+		}
+	}
+	return ""
 }
 
 func (s *Service) faviconFor(rec Record) string {
@@ -95,15 +140,8 @@ func (s *Service) defaultName() string {
 	case "procurement":
 		return "ProcurementCore"
 	default:
-		return ""
+		return "Cores"
 	}
-}
-
-func (s *Service) coalesceName(dbName string) string {
-	if dbName != "" {
-		return dbName
-	}
-	return s.defaultName()
 }
 
 func (s *Service) coalesceSize(val int16) int16 {
