@@ -1,5 +1,9 @@
 # Cores Common
 
+## Suite-Vertrag
+
+`cores-common` besitzt keine Benutzeroberfläche. Sobald dieses Modul UI-nahe Verträge oder auslieferbare Webressourcen erhält, gelten ohne Ausnahme das [Cores Suite Designsystem](https://github.com/nbt4/cores/blob/main/docs/DESIGN_SYSTEM.md) und dessen Sync-/Prüfworkflow.
+
 Gemeinsame Go-Pakete für RentalCore, WarehouseCore, PlannerCore,
 ProcurementCore und Cores Dashboard. Das Modul bündelt wiederverwendbare
 Bausteine für Branding, Konfiguration, Healthchecks, JWT-Verarbeitung, CORS und
