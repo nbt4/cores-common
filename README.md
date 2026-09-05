@@ -18,7 +18,16 @@ require github.com/nbt4/cores-common <version>
 Das Modul benötigt Go 1.25. Neue Pakete müssen serviceunabhängig bleiben und mit
 `go test ./...` geprüft werden.
 
-## Branding
+## Authentifizierte Sitzungen
+
+`pkg/jwt.ValidateSession` prüft HS256-Suite-Tokens mit verpflichtendem Ablaufdatum
+und lädt über `DatabaseUserLookup` den aktuellen Benutzerstatus sowie die aktuelle
+Administratorrolle. Kontosperren, gelöschte Benutzer und Rollenänderungen gelten
+ab der nächsten Anfrage, auch bei bereits ausgestellten Tokens. Datenbankfehler
+verweigern den Zugriff; Kontoabfragen besitzen ein Drei-Sekunden-Limit und keinen
+Cache. Fachliche Rollen und Planner-Mitgliedschaften bleiben zusätzlich erforderlich.
+
+## Branding-Modell
 
 `pkg/branding` definiert die zentrale Konfiguration und semantische Asset-Sätze
 für Produkt- und Unternehmensmarken. Der Service liest
